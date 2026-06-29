@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>渋川堂 執着診断</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f0ead8;   /* 和紙：ロゴ背景と同じ若干黄ばんだ色 */
+  --text:    #1a1a18;   /* 墨色：ほぼ黒 */
+  --line:    #c8bfa8;   /* 薄い罫線 */
+  --hover:   #e8e0cc;   /* ホバー時の背景 */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "YuMincho", "Hiragino Mincho ProN", "MS Mincho", serif;
+  line-height: 2.2;
+  letter-spacing: 0.18em;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 60px 24px 100px;
+}
+
+.container {
+  width: 100%;
+  max-width: 460px;
+  text-align: center;
+  position: relative;
+}
+
+/* ── シーン切り替え ── */
+.scene {
+  display: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 1.8s ease, transform 1.8s ease;
+}
+.scene.active  { display: block; }
+.scene.visible { opacity: 1; transform: translateY(0); }
+
+/* ── TOP画面 ── */
+.top-title {
+  font-size: 52px;
+  font-weight: bold;
+  font-family: "YuMincho", "Hiragino Mincho ProN", "MS Mincho", serif;
+  color: var(--text);
+  letter-spacing: 0.4em;
+  margin-bottom: 12px;
+  margin-top: 10px;
+}
+.top-sub {
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 0.3em;
+  color: var(--text);
+  margin-bottom: 40px;
+}
+.top-desc {
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 56px;
+  line-height: 2.4;
+  letter-spacing: 0.2em;
+}
+.btn-enter {
+  display: inline-block;
+  border: 1px solid var(--text);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: 0.4em;
+  padding: 16px 52px;
+  cursor: pointer;
+  background: none;
+  transition: background 0.5s, color 0.5s;
+}
+.btn-enter:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+
+/* ── 問い画面 ── */
+.q-label {
+  font-size: 36px;
+  font-family: "YuMincho", "Hiragino Mincho ProN", "MS Mincho", serif;
+  font-weight: bold;
+  color: var(--text);
+  letter-spacing: 0.3em;
+  margin-bottom: 40px;
+}
+.progress-bar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+.pdot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--line);
+  border: 1px solid var(--text);
+  transition: all 0.4s;
+}
+.pdot.done { background: var(--text); border-color: var(--text); }
+.pdot.now  { background: var(--text); border-color: var(--text); width: 9px; height: 9px; }
+
+.q-num {
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.35em;
+  color: var(--text);
+  margin-bottom: 36px;
+}
+.q-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text);
+  line-height: 2.2;
+  margin-bottom: 56px;
+  white-space: pre-line;
+}
+.choices { display: flex; flex-direction: column; }
+.choice {
+  background: none;
+  border: none;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  padding: 24px 16px;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.9;
+  transition: color 0.4s, background 0.4s, padding-left 0.3s;
+}
+.choice:last-child { border-bottom: 1px solid var(--line); }
+.choice:hover {
+  color: var(--text);
+  background: var(--hover);
+  padding-left: 26px;
+}
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.25em;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-top: 36px;
+  display: inline-block;
+  transition: color 0.4s;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.btn-back:hover { color: var(--text); }
+
+/* ── 結果画面 ── */
+.r-label {
+  font-size: 22px;
+  letter-spacing: 0.3em;
+  color: var(--text);
+  margin-bottom: 24px;
+  font-weight: bold;
+}
+.r-kana {
+  font-size: 13px;
+  letter-spacing: 0.25em;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.r-type {
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: 0.4em;
+  margin-bottom: 40px;
+}
+.r-quote {
+  border-left: 1px solid var(--text);
+  padding: 10px 20px;
+  text-align: left;
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--text);
+  line-height: 2.4;
+  margin-bottom: 44px;
+  white-space: pre-line;
+}
+.r-section {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 0.35em;
+  color: var(--text);
+  text-align: left;
+  margin-bottom: 18px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.r-body {
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--text);
+  text-align: left;
+  line-height: 2.6;
+  margin-bottom: 56px;
+  white-space: pre-line;
+}
+
+/* ── 有料ボックス ── */
+.pay-wall {
+  border-top: 1px solid var(--line);
+  padding-top: 44px;
+  margin-bottom: 36px;
+}
+.pay-text {
+  font-size: 17px;
+  color: var(--text);
+  letter-spacing: 0.2em;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+.btn-pay {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--text);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 900 !important;
+  letter-spacing: 0.35em;
+  padding: 18px;
+  cursor: pointer;
+  transition: background 0.5s, color 0.5s;
+}
+.btn-pay:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+
+/* ── リトライ ── */
+.btn-retry {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  padding: 8px;
+}
+
+/* ── フッターロゴ（全画面共通） ── */
+.footer-logo {
+  margin-top: 56px;
+  opacity: 0.55;
+  text-align: center;
+}
+.footer-logo img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="scene" id="s-top">
+    <div class="top-title">渋 川 堂</div>
+    <div class="top-sub">心を映す、小さな間</div>
+    <div class="top-desc">三つの問いに答えてください。<br>あなたの心が映し出されます。</div>
+    <button class="btn-enter" onclick="startDiag()">入る</button>
+    <div class="footer-logo">
+      <img src="logo.png" alt="渋川堂">
+    </div>
+  </div>
+
+  <div class="scene" id="s-q">
+    <div class="q-label" id="q-label"></div>
+    <div class="progress-bar" id="progress"></div>
+    <div class="q-num" id="q-num"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="choices" id="choices"></div>
+    <button class="btn-back" id="btn-back" onclick="goBack()">← 前頁へ戻る</button>
+    <div class="footer-logo">
+      <img src="logo.png" alt="渋川堂">
+    </div>
+  </div>
+
+  <div class="scene" id="s-result">
+    <div class="r-label">渋川堂『執着診断』結果</div>
+    <div class="r-kana" id="r-kana"></div>
+    <div class="r-type" id="r-type"></div>
+    <div class="r-section">【 解 釈 】</div>
+    <div class="r-body" id="r-body"></div>
+    <div class="r-section">【 心の温度を下げる処方箋 】</div>
+    <div class="r-body" id="r-remedy"></div>
+    <div class="pay-wall">
+      <div class="pay-text">──ここから先は、<br>　　より深い業（ごう）を紐解く。</div>
+      <button class="btn-pay" id="btn-pay"><span style="display:block; padding-bottom:14px;">［ 紐解く（九百円） ］</span><span style="display:block; font-weight:bold; color:red; letter-spacing:0.3em; font-size:17px; padding-top:14px; border-top:1px solid transparent;">乞うご期待</span></button>
+    </div>
+    <button class="btn-retry" onclick="goBackToQ2()">← 前頁へ戻る</button>
+    <button class="btn-retry" onclick="showScene('s-top')">もう一度診断する</button>
+    <div class="footer-logo">
+      <img src="logo.png" alt="渋川堂">
+    </div>
+  </div>
+
+</div>
+<script>
+/* ── 設問：2問（マトリクス準拠） ── */
+const questions = [
+  {
+    text: "ふと目を閉じたとき、\nあなたの心はどこへ向かいますか",
+    choices: [
+      {text: "一、過ぎ去ったあの日の記憶や面影", tag: "1"},
+      {text: "二、まだ見ぬ明日への不安や期待", tag: "2"},
+      {text: "三、ままならぬまま過ぎゆく、目の前の現実", tag: "3"}
+    ]
+  },
+  {
+    text: "その時、\nあなたの胸の奥底を\n「最も激しく揺さぶるもの」",
+    choices: [
+      {text: "一、「どうしても欲しい」「あの時に戻りたい」という、満たされぬ渇愛", tag: "A"},
+      {text: "二、「なぜ思い通りにならぬのか」という、世界や己に対する行き場のない怒り", tag: "B"},
+      {text: "三、「どうしていいか分からない」という、逃げ場のない混迷と心の霧", tag: "C"}
+    ]
+  }
+];
+
+const results = {
+  "1-A": {
+    kana: "かこおんよく", type: "過去恩欲",
+    body: "貴方の魂は、すでに過ぎ去りし「あの日」の園をさまよい、胸の奥底に「貪（とん・愛着）」の澱を抱えながら、あの頃のような瑞々しい記憶や面影──すなわち「欲愛（よくあい）」──を「いまの現実」に激しく求めておいでです。「あの頃は良かった」「こうであって欲しかった」という思い出の美しさに目が眩んでいるため、目の前にある素朴な現実がすべて色褪せて見え、慢性的に、どこか満たされぬ渇きに襲われています。なれど、得られぬ過去 the 幻影を抱きしめるような営みは、貴方の魂の渇きをいよいよ深くするばかり。記憶の蜜は、吸うほどに現在の喉を乾かせるものでございます。",
+    remedy: "求める手を、一度だらりと下ろしてみることです。「私は今、古い記憶の繪葉書を眺めている」と心の中で実況し、外へ向かう心を静かに内へと連れ戻しなさい。温かき白湯を淹れ、ただ一口ずつ、喉を通りゆく感覚だけに意識を絞って飲み干すのです。その静寂こそが、昂ぶる心の熱を穏やかに凪がせる良薬でございます。"
+  },
+  "1-B": {
+    kana: "かこふんう", type: "過去憤有",
+    body: "変えられぬ歴史、過ぎ去ったあの日の景色に囚われ、当時の不条理に対する「瞋（じん・憤り）」を抱えながら、胸の内で「なぜ思い通りにならなかったのか」という行き場のない怒りの火を燻らせてはいませんか。その焦燥は、世界の時間を思い通りに支配したいという傲慢の裏返し。上座の教えにおいては、過去の記憶はすべて脳裏の「幻影（サンカーラ）」に過ぎぬと説きます。幽霊を相手に刃を振るうのは、もうおよしなさい。その怒りの炎は、過去の相手ではなく、現在の貴方自身の静寂を焼き尽くしているのです。",
+    remedy: "終わった物語の頁（ページ）を書き換える万年筆など此の世に存在いたしません。「私は今、変えられぬ過去を拒んで身をこわばらせている」と客観的に気づくこと。背筋を伸ばし、格子窓を通り過ぎる夜風のように、その憤りをさらさらと受け流すのです。「なるようにしか、ならぬ」という諦念（あきらめ）を持つことで、貴方の心には涼やかな平穏が戻ってまいります。"
+  },
+  "1-C": {
+    kana: "かこめいりゅう", type: "過去迷流",
+    body: "すでに幕の下りた過去の舞台に立ち尽くし、胸の奥は「痴（ち・混乱）」の薄明かりに包まれております。明確な怒りや強い愛着があるわけではないけれど、ただ寂しく、なぜあんなことになったのかと理由を探しては独り、記憶の糸を絡ませ、思考の霧に迷い込むそのお姿。なれど、迷い惑うその強い情念もまた、裏を返せば「正しく生きたい」と願いながら深く傷ついた、貴方の命の悲痛な叫びに他なりません。変化を恐れるあまり、前に進むことも後ろに戻ることもできず、古い檻の中で自らの存在を膠着させている状態でございます。",
+    remedy: "縁（えん）によって生じた過去の現象に、永劫不変の理由などございません。迷いが深いときは、過去の原因を探るのを一切おやめなさい。「私は今、脳裏の古い引き出しを開けている」と事実だけを確認し、今日できる小さな作業（片付けや洗物など）に、ただ五感を没頭させ、物理的に身体を動かしなさい。五感の事実に立ち返ることで、妄執の霧は自ずと晴れてゆくでしょう。"
+  },
+  "2-A": {
+    kana: "みらいぼうよく", type: "未来望欲",
+    body: "まだ見ぬ明日に対して、「こうなって欲しい」「あれを手に入れなければ幸せになれない」という、満たされぬ「貪（とん・渇愛）」に魂を焦がしておいでです。未だ存在せぬ未来の理想や期待──すなわち「有愛（うあい）」──の影を永遠に固定し、コントロールせんとする病。思い出や空想の美しさに目を奪われ、外側へ向けて求める手を伸ばすあまり、今ここにある素朴な現実を裏切り、貴方の貴重な生命力が「未来の修正作業」に浪費されております。得られぬ明日を抱きしめるような営みは、もうおやめなさい。",
+    remedy: "明日を紡ぐのは、未だ見ぬ未来への執着ではなく、今の貴方の清らかな「行い（業）」のみです。求める手を、一度だらりと下ろしてみることです。未来へ向かう心を静かに内へと連れ戻し、呼吸に意識を向け、「私は、今、此処にいる」と三度、胸の中で唱えてごらんなさい。今ここにある呼吸の微かな温もりのみに意識を注ぐ静寂こそが、未来への昂ぶりを穏やかに凪がせる良薬でございます。"
+  },
+  "2-B": {
+    kana: "みらいふんう", type: "未来憤有",
+    body: "未だ来ぬ未来の足音に「瞋（じん・拒絶や恐怖）」を抱き、「なぜ思い通りにならぬのか」という予期せぬ展開に対して、胸の内で静かな炎を燃やし続けておいでです。未来の不確実さをすべて自分の統制下に置いたいという焦燥は、世界を思い通りに支配したいという傲慢の裏返しにございます。期待通りに動かぬ未来（reality）を頑なに拒絶しようとするその怒りの炎は、他者ではなく、貴方自身の現在の静寂を焼き尽くしているのです。",
+    remedy: "「私は今、変えられぬ未来の不確かさを拒んで身を焦がしている」と、ただ鏡を見るように客観的に気づくことです。他人に救いや絶対の安心を求める前に、ほんの一呼吸、立ち止まってごらんなさい。万物は流転するもの。「なるようにしか、ならぬ」と胸の内で呟き、肩の力を抜きなさい。制御できぬ不確実さをそのまま器に受け入れる諦念を持つことで、貴方の心には涼やかな平穏が戻ってまいります。"
+  },
+  "2-C": {
+    kana: "みらいめいろ", type: "未来迷霧",
+    body: "まだ見ぬ明日への不安の海を漂いながら、胸の奥は「痴（ち・無知）」の霧に閉ざされ、自分がこれからどうして良いかさえ分からぬまま、逃げ場のない混迷と心の霧に立ち尽くしておいでです。理性の光が遮られた闇の中で、思考をフリーズさせている状態。しかし、先の見えない暗闇に怯え、迷い惑うその強い情念もまた、裏を返せば「正しく生きたい」「間違えたくない」と願いながら深く傷ついた、貴方の命の悲痛な叫びに他なりません。",
+    remedy: "思考をフリーズさせる未来の霧を、無理に晴らす必要はございません。迷いが深いときは、未来を予測して考えることを一切おやめなさい。状況に良し悪しの解釈をくだすのを止め、まずは、今日できる小さな作業（片付けや洗物など）に、ただ五感を没頭させるのです。足元の一歩に集中するとき、心に静けさが戻ってきます。"
+  },
+  "3-A": {
+    kana: "げんざいかつあい", type: "現在渇愛",
+    body: "ままならぬまま過ぎゆく目の前の現実を前にして、「どうしてもこれが欲しい」「あの状態に戻りたい」という、満たされぬ渇愛（貪）に魂を焦がしておいでです。目の前にある素朴な現実がすべて色褪せて見えるため、慢性的に、どこか満たされぬ渇きを外に求め、常に「ここではないどこか」の甘美な歓びや承認──すなわち「欲愛（よくあい）」──を「いまの現実」に激しく要求している状態でございます。なれど、外側から与えられる賞賛や獲得は、魂の渇きを根本から癒す薬にはなり得ず、さらなる依存を生むだけでございます。",
+    remedy: "「私は今、目の前の現実を否定し、外側の蜜を欲している」と心の中で実況しなさい。外へと向かう求める手を、一度だらりと下ろしてみることです。心を静かに内へと連れ戻し、温かき白湯を淹れ、ただ一口ずつ、喉を通りゆく感覚だけに意識を絞って飲み干すのです。その静寂こそが、現在の不満に昂ぶる心の熱を穏やかに凪がせる良薬でございます。"
+  },
+  "3-B": {
+    kana: "げんざいじんか", type: "現在瞋火",
+    body: "「なぜ目の前の現実が思い通りにならぬのか」という、世界や己に対する行き場のない怒り。ままならぬ現実を頑なに拒絶し、胸の内で「瞋（じん・憤怒）」の火を激しく燻らせてはいませんか。期待通りに動かぬ現実（reality）に対して身をこわばらせ、脳内で理想の結末を統制しようとするあまり、貴方の貴重な生命力が「今この瞬間を生きること」ではなく「現実との不毛な戦い」に浪費されております。その怒りの炎は、他者ではなく、貴方自身の静寂を焼き尽くしているのです。",
+    remedy: "「私は今、変えられぬ現実を拒んで身をこわばらせている」と客観的に気づくことです。深く息を吐き、「思い通りにしたい」という焦りを一度手放すのです。背筋を伸ばし、格子窓を通り過ぎる夜風のように、その憤りをさらさらと受け流しなさい。万物は流転するもの。「なるようにしか、ならぬ」と呟き、肩の力を抜くことで、涼やかな平穏が戻ってまいります。"
+  },
+  "3-C": {
+    kana: "げんざいむぜつ", type: "現在無絶",
+    body: "ままならぬまま過ぎゆく目の前の現実から目を背け、胸の奥は「痴（ち・混乱）」の闇に包まれております。どうして良いか解らず、逃げ場のない混迷と心の霧にただ立ち尽くすそのお姿。自分の苦しみの原因が何なのか全く整理がつかず、思考の霧に迷い込んでおいでです。なれど、迷い惑うその強い情念もまた、裏を返せば「このままならぬ現実の中で、正しく生きたい」と願いながら深く傷ついた、貴方の命の悲痛な叫びに他なりません。",
+    remedy: "散らかった暗闇の中で思考の刃を振り回せば、ご自身を傷つけるだけです。まずは、その判然としないモヤモヤに「私は今、正体の分からぬ霧の中にいる」とラベリング（名前つけ）をし、それ以上追うのを止めなさい。考えることを一切おやめなり、ただ冷たい水を一杯、喉越しを感じて飲むのです。今日できる小さな作業（片付けや洗物など）に、ただ五感を没頭させ、物理的に身体を動かして五感の事実に立ち返りなさい。"
+  }
+};
+
+let current = 0;
+let answers  = [];
+
+function showScene(id) {
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active','visible'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  setTimeout(() => el.classList.add('visible'), 60);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function startDiag() {
+  current = 0;
+  answers = [];
+  renderQ();
+  showScene('s-q');
+}
+
+function renderQ() {
+  const q = questions[current];
+  const labels = ['第一の問い', '第二の問い'];
+  document.getElementById('q-label').textContent = labels[current];
+  document.getElementById('progress').innerHTML = questions.map((_,i) => {
+    let c = 'pdot';
+    if (i < current) c += ' done';
+    if (i === current) c += ' now';
+    return `<div class="${c}"></div>`;
+  }).join('');
+  document.getElementById('q-num').textContent = `問 ${current+1} ／ ${questions.length}`;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('choices').innerHTML = q.choices.map(c =>
+    `<button class="choice" onclick="answer('${c.tag}')">${c.text}</button>`
+  ).join('');
+}
+
+function answer(tag) {
+  answers.push(tag);
+  current++;
+  if (current < questions.length) {
+    renderQ();
+  } else {
+    showResult();
+  }
+}
+
+function goBack() {
+  if (current === 0) {
+    showScene('s-top');
+  } else {
+    answers.pop();
+    current--;
+    renderQ();
+  }
+}
+
+function showResult() {
+  const key = answers.join('-');
+  const r = results[key];
+  document.getElementById('r-kana').textContent  = r.kana;
+  document.getElementById('r-type').textContent  = r.type;
+  document.getElementById('r-body').textContent  = r.body;
+  document.getElementById('r-remedy').textContent = r.remedy;
+  document.getElementById('btn-pay').onclick = () => {};
+  showScene('s-result');
+}
+
+function goBackToQ2() {
+  answers.pop();
+  current = 1;
+  renderQ();
+  showScene('s-q');
+}
+
+window.onload = () => showScene('s-top');
+</script>
+</body>
+</html>
